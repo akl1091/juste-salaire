@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le Juste Salaire — le jeu des salaires de départ</title>
+<meta name="author" content="Ameur Aklil">
+<meta name="copyright" content="© 2026 Ameur Aklil">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💶</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,900&family=Rajdhani:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#050c2e;
+    --bg-panel:#0d1c5c;
+    --bg-panel-2:#0a1646;
+    --hairline:#31469e;
+    --gold:#f0b429;
+    --gold-bright:#ffd873;
+    --cream:#eef1ff;
+    --cream-dim:#9aa6e0;
+    --correct:#2f9e6a;
+    --correct-bright:#5fd696;
+    --wrong:#c73f3f;
+    --wrong-bright:#ef6a5a;
+    --radius:4px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    position:relative;
+    background:
+      radial-gradient(ellipse 900px 600px at 50% 0%, #16257c 0%, transparent 60%),
+      radial-gradient(ellipse 1400px 900px at 50% 110%, #101d5e 0%, var(--bg-deep) 60%),
+      var(--bg-deep);
+    color:var(--cream);
+    font-family:'Rajdhani', sans-serif;
+    font-weight:500;
+    font-size:17px;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:32px 16px 64px;
+    overflow-x:hidden;
+  }
+  body::before{
+    content:"";
+    position:fixed; inset:-20% -20%;
+    background:conic-gradient(from 0deg at 50% 30%,
+      transparent 0deg, rgba(240,180,41,.05) 8deg, transparent 22deg,
+      transparent 160deg, rgba(154,166,224,.05) 172deg, transparent 190deg,
+      transparent 340deg);
+    animation:spotlightSpin 60s linear infinite;
+    pointer-events:none; z-index:0;
+  }
+  @keyframes spotlightSpin{ to{ transform:rotate(360deg); } }
+  .stage, .topbar{ position:relative; z-index:1; }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
+  }
+  h1,h2,h3{font-family:'Fraunces', serif; margin:0;}
+  button{font-family:inherit; cursor:pointer;}
+  button:focus-visible, input:focus-visible, .answer:focus-visible{
+    outline:3px solid var(--gold-bright);
+    outline-offset:2px;
+  }
+  .num{font-family:'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums;}
+
+  .stage{width:100%; max-width:1080px;}
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:24px; gap:12px; flex-wrap:wrap;
+  }
+  .brand{display:flex; align-items:baseline; gap:10px;}
+  .brand .mark{
+    font-family:'Rajdhani', sans-serif; font-weight:700; font-size:22px; letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--gold-bright);
+    text-shadow:0 0 18px rgba(240,180,41,.35);
+  }
+  .brand .sub{font-size:13px; color:var(--cream-dim);}
+  .music-toggle{
+    display:flex; align-items:center; gap:8px;
+    background:var(--bg-panel); border:1px solid var(--hairline);
+    border-radius:999px; padding:8px 16px; color:var(--cream); font-size:14px;
+  }
+  .music-toggle:hover{border-color:var(--gold);}
+  .music-toggle .dot{
+    width:8px; height:8px; border-radius:50%; background:var(--cream-dim);
+  }
+  .music-toggle.on .dot{background:var(--gold-bright); box-shadow:0 0 6px var(--gold-bright);}
+
+  /* ---------- Panels ---------- */
+  .panel{
+    background:linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-panel-2) 100%);
+    border:1px solid var(--hairline);
+    border-radius:var(--radius);
+    box-shadow:0 0 0 1px rgba(240,180,41,.08), 0 20px 50px -20px rgba(0,0,0,.6);
+  }
+
+  /* ---------- Start screen ---------- */
+  .start-panel{
+    padding:56px 40px;
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+  }
+  .start-panel::before{
+    content:"";
+    position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse 620px 320px at 50% -10%, rgba(240,180,41,.16) 0%, transparent 65%);
+    pointer-events:none;
+  }
+  .hero-title{
+    position:relative;
+    font-size:clamp(38px, 6vw, 64px);
+    font-weight:900;
+    font-variation-settings:"opsz" 144;
+    line-height:1.02;
+    color:var(--cream);
+  }
+  .hero-title em{
+    font-style:normal;
+    color:var(--gold-bright);
+    text-shadow:0 0 30px rgba(240,180,41,.5);
+  }
+  .hero-tagline{
+    margin-top:14px; font-size:17px; color:var(--cream-dim);
+    max-width:520px; margin-left:auto; margin-right:auto;
+  }
+  .rules{
+    margin:32px auto 0; max-width:560px; text-align:left;
+    display:grid; gap:12px;
+  }
+  .rule-row{
+    display:flex; gap:14px; align-items:flex-start;
+    padding:14px 16px; background:var(--bg-panel-2); border:1px solid var(--hairline); border-radius:var(--radius);
+  }
+  .rule-row .glyph{font-size:20px; line-height:1; margin-top:1px;}
+  .rule-row .txt{font-size:14.5px; color:var(--cream-dim); line-height:1.5;}
+  .rule-row .txt b{color:var(--cream); font-weight:600;}
+
+  .dispositif-credit{
+    margin:18px auto 0; max-width:440px;
+    font-size:12.5px; letter-spacing:.03em; line-height:1.6;
+    color:var(--cream-dim);
+    padding:10px 18px; border:1px solid var(--hairline); border-radius:999px;
+    background:rgba(240,180,41,.06);
+  }
+  .dispositif-credit strong{color:var(--gold-bright); font-weight:700;}
+  .name-row{
+    margin:28px auto 0; max-width:360px;
+    display:flex; flex-direction:column; gap:8px; text-align:left;
+  }
+  .name-row label{font-size:13px; color:var(--cream-dim);}
+  .name-row input{
+    background:var(--bg-deep); border:1px solid var(--hairline); border-radius:var(--radius);
+    padding:12px 14px; color:var(--cream); font-size:15px;
+  }
+  .name-row input:focus{border-color:var(--gold);}
+
+  .cta{
+    margin-top:30px;
+    background:var(--gold);
+    color:#12210f;
+    border:none;
+    font-weight:700;
+    font-size:17px;
+    padding:16px 40px;
+    border-radius:999px;
+    letter-spacing:.01em;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .cta:hover{background:var(--gold-bright); transform:translateY(-1px);}
+  .cta:active{transform:translateY(0);}
+
+  /* ---------- Game screen ---------- */
+  .game-grid{
+    display:grid;
+    grid-template-columns: 1fr 240px;
+    gap:20px;
+  }
+  @media (max-width: 780px){
+    .game-grid{grid-template-columns: 1fr;}
+    .ladder{order:3;}
+  }
+
+  .game-main{display:flex; flex-direction:column; gap:18px;}
+
+  .status-row{
+    display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;
+  }
+  .palier-tag{
+    font-size:13px; color:var(--cream-dim);
+  }
+  .palier-tag .val{
+    font-size:15px; color:var(--gold-bright); font-weight:600;
+  }
+
+  .timer-wrap{
+    display:flex; align-items:center; gap:10px;
+    min-width:170px;
+  }
+  .timer-sec{font-size:20px; width:34px; text-align:right;}
+  .timer-track{
+    flex:1; height:8px; background:var(--bg-panel-2); border-radius:999px; overflow:hidden;
+    border:1px solid var(--hairline);
+  }
+  .timer-fill{
+    height:100%; width:100%; background:var(--correct-bright);
+    transition:width 1s linear, background .3s ease;
+  }
+  .timer-fill.warn{background:var(--gold-bright);}
+  .timer-fill.danger{background:var(--wrong-bright);}
+
+  .joker-row{display:flex; gap:10px; flex-wrap:wrap;}
+  .joker-btn{
+    display:flex; align-items:center; gap:8px;
+    background:var(--bg-panel-2); border:1px solid var(--hairline); color:var(--cream);
+    padding:9px 14px; border-radius:999px; font-size:13.5px; font-weight:500;
+  }
+  .joker-btn:hover:not(:disabled){border-color:var(--gold); color:var(--gold-bright);}
+  .joker-btn:disabled{opacity:.35; cursor:not-allowed; text-decoration:line-through;}
+  .joker-btn .glyph{font-size:15px;}
+
+  .question-panel{
+    padding:34px 32px;
+    text-align:center;
+    position:relative;
+    border-color:rgba(240,180,41,.35);
+    box-shadow:0 0 0 1px rgba(240,180,41,.18), 0 0 60px -20px rgba(240,180,41,.25), 0 20px 50px -20px rgba(0,0,0,.6);
+  }
+  .q-eyebrow{
+    font-size:13px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--cream-dim); margin-bottom:10px; font-weight:700;
+    display:inline-flex; align-items:center; gap:7px;
+    padding:5px 14px; border-radius:999px; border:1px solid var(--hairline);
+  }
+  .q-eyebrow.cat-mythe{ color:#ffb4a6; border-color:#a5433a; background:rgba(199,63,63,.12); }
+  .q-eyebrow.cat-pro{ color:#8fe0b5; border-color:#2f7a5c; background:rgba(47,158,106,.12); }
+  .q-eyebrow.cat-repere{ color:var(--gold-bright); border-color:var(--gold); background:rgba(240,180,41,.1); }
+  .q-metier{
+    font-family:'Fraunces', serif;
+    font-size:clamp(23px, 3.2vw, 31px);
+    font-weight:700;
+    line-height:1.28;
+  }
+  .q-metier .role{color:var(--gold-bright);}
+  .q-prompt{margin-top:10px; font-size:15px; color:var(--cream-dim);}
+
+  .answers{
+    display:grid; grid-template-columns:1fr 1fr; gap:14px 16px;
+    margin-top:10px;
+  }
+  @media (max-width:560px){ .answers{grid-template-columns:1fr;} }
+  .answer{
+    display:flex; align-items:center; gap:14px;
+    text-align:left;
+    background:linear-gradient(90deg, var(--bg-panel-2) 0%, #0d1c5c 100%);
+    border:1px solid var(--hairline);
+    color:var(--cream);
+    padding:15px 22px;
+    clip-path:polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
+    font-size:16.5px;
+    font-weight:600;
+    transition:border-color .15s ease, background .15s ease, transform .15s ease;
+  }
+  .answer:hover:not(:disabled){border-color:var(--gold); transform:translateX(2px);}
+  .answer .letter{
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+    width:26px; height:26px;
+    border:1.5px solid var(--gold-bright);
+    border-radius:50%;
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600; font-size:13px;
+    color:var(--gold-bright);
+  }
+  .answer .amount{font-weight:600; font-family:'IBM Plex Mono', monospace;}
+  .answer:disabled{cursor:default;}
+  .answer.selected{border-color:var(--gold); background:linear-gradient(90deg, #23306e 0%, #16205e 100%);}
+  .answer.selected .letter{background:var(--gold); color:#141b4d; border-color:var(--gold);}
+  .answer.correct{background:rgba(47,158,106,.28); border-color:var(--correct-bright); color:var(--correct-bright);}
+  .answer.correct .letter{border-color:var(--correct-bright); color:var(--correct-bright);}
+  .answer.wrong{background:rgba(199,63,63,.28); border-color:var(--wrong-bright); color:var(--wrong-bright);}
+  .answer.wrong .letter{border-color:var(--wrong-bright); color:var(--wrong-bright);}
+
+  .confirm-row{
+    margin-top:16px; display:flex; justify-content:center; align-items:center; gap:14px; flex-wrap:wrap;
+  }
+  .confirm-row .txt{font-size:14.5px; color:var(--cream-dim);}
+
+  .public-bars{margin-top:14px; display:grid; gap:8px;}
+  .public-bar-row{display:flex; align-items:center; gap:10px; font-size:12.5px; color:var(--cream-dim);}
+  .public-bar-row .letter{width:16px; font-family:'IBM Plex Mono', monospace;}
+  .public-bar-track{flex:1; height:8px; background:var(--bg-deep); border-radius:999px; overflow:hidden;}
+  .public-bar-fill{height:100%; background:var(--gold); width:0%; transition:width .6s ease;}
+  .public-bar-pct{width:34px; text-align:right; font-family:'IBM Plex Mono', monospace;}
+
+  .hint-box{
+    margin-top:14px; text-align:left;
+    background:rgba(201,162,39,.1); border:1px dashed var(--gold);
+    border-radius:var(--radius); padding:12px 16px; font-size:14px; color:var(--gold-bright);
+  }
+
+  .formation-box{
+    margin-top:14px; text-align:left;
+    background:rgba(94,166,255,.08); border:1px solid #3a55b8;
+    border-radius:var(--radius); padding:14px 18px; font-size:14px; color:#c9d4ff;
+    line-height:1.6;
+  }
+  .formation-box b{color:#9db4ff;}
+
+  .continue-row{display:flex; justify-content:center; gap:12px; margin-top:6px;}
+  .btn-secondary{
+    background:transparent; border:1px solid var(--hairline); color:var(--cream-dim);
+    padding:11px 22px; border-radius:999px; font-size:14px;
+  }
+  .btn-secondary:hover{border-color:var(--gold); color:var(--gold-bright);}
+  .btn-primary{
+    background:var(--gold); color:#12210f; border:none; font-weight:700;
+    padding:11px 26px; border-radius:999px; font-size:14.5px;
+  }
+  .btn-primary:hover{background:var(--gold-bright);}
+
+  /* ---------- Ladder ---------- */
+  .ladder{
+    padding:18px 14px;
+    display:flex; flex-direction:column-reverse;
+    gap:2px;
+    max-height:520px;
+    overflow-y:auto;
+  }
+  .ladder-title{
+    order:99;
+    font-size:12px; letter-spacing:.03em; color:var(--cream-dim);
+    padding:6px 8px 12px;
+  }
+  .rung{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:8px 10px; border-radius:4px; font-size:13.5px;
+  }
+  .rung .n{color:var(--cream-dim); width:20px;}
+  .rung .amt{font-family:'IBM Plex Mono', monospace; font-weight:600;}
+  .rung.net{border:1px dashed var(--gold); }
+  .rung.current{background:var(--gold); color:#141b4d; box-shadow:0 0 16px rgba(240,180,41,.5);}
+  .rung.current .n, .rung.current .amt{color:#141b4d;}
+  .rung.passed{color:var(--cream-dim);}
+  @media (max-width:780px){
+    .ladder{flex-direction:row-reverse; max-height:none; overflow-x:auto; overflow-y:visible;}
+    .ladder-title{display:none;}
+    .rung{flex-direction:column; gap:2px; min-width:76px;}
+  }
+
+  /* ---------- End screen ---------- */
+  .end-panel{padding:48px 36px; text-align:center;}
+  .end-kicker{font-size:14px; color:var(--cream-dim);}
+  .end-amount{
+    font-family:'Fraunces', serif; font-weight:900; font-variation-settings:"opsz" 144;
+    font-size:clamp(40px,7vw,72px); color:var(--gold-bright); margin-top:6px;
+  }
+  .end-msg{margin-top:14px; font-size:15px; color:var(--cream-dim); max-width:480px; margin-left:auto; margin-right:auto;}
+  .recap{
+    margin:30px auto 0; max-width:520px; text-align:left;
+    display:grid; gap:6px;
+  }
+  .recap-row{
+    display:flex; justify-content:space-between; gap:10px;
+    padding:9px 12px; border-radius:4px; font-size:13.5px;
+    background:var(--bg-panel-2); border:1px solid var(--hairline);
+  }
+  .recap-row.ok{border-left:3px solid var(--correct-bright);}
+  .recap-row.ko{border-left:3px solid var(--wrong-bright);}
+  .recap-row .m{color:var(--cream-dim);}
+
+  .hidden{display:none !important;}
+  footer{margin-top:36px; font-size:12px; color:var(--cream-dim); text-align:center; max-width:600px;}
+</style>
+</head>
+<body>
+<audio id="bgMusic" src="musique-ambiance.mp3" loop preload="auto"></audio>
+
+<div class="stage">
+  <div class="topbar">
+    <div class="brand">
+      <span class="mark">💶 LE JUSTE SALAIRE</span>
+      <span class="sub">le jeu des salaires de départ</span>
+    </div>
+    <button class="music-toggle" id="musicToggle" aria-pressed="false">
+      <span class="dot"></span>
+      <span id="musicLabel">Musique coupée</span>
+    </button>
+  </div>
+
+  <!-- START SCREEN -->
+  <section class="panel start-panel" id="screenStart">
+    <h1 class="hero-title">Le métier qui fait rêver…<br><em>paie-t-il vraiment plus ?</em></h1>
+    <p class="hero-tagline">16 métiers, un salaire de départ à deviner à chaque fois. Certains font rêver mais paient moins qu'on l'imagine. D'autres, accessibles par la voie pro, gagnent bien plus que leur image.</p>
+    <p class="dispositif-credit">Dispositif <strong>Objectif Réussite</strong> — Collège Jean-Claude Chabanne, Pontoise<br>Piloté par Mme Bothorel et M. Aklil</p>
+
+    <div class="rules">
+      <div class="rule-row">
+        <span class="glyph">💭</span>
+        <span class="txt"><b>Des métiers "de rêve"</b> — influenceur, footballeur, trader… souvent moins payés qu'on ne le pense au démarrage.</span>
+      </div>
+      <div class="rule-row">
+        <span class="glyph">🛠️</span>
+        <span class="txt"><b>Des métiers de la voie pro</b> — soudeur, grutier, électricien… accessibles sans bac+5, et parfois mieux payés qu'on ne le croit.</span>
+      </div>
+      <div class="rule-row">
+        <span class="glyph">⏱️</span>
+        <span class="txt"><b>25 secondes par question, trois jokers</b> (50:50, avis du public, indice du prof) et deux filets de sécurité — comme au vrai jeu télévisé.</span>
+      </div>
+    </div>
+
+    <div class="name-row">
+      <label for="playerName">Prénom ou nom d'équipe (facultatif)</label>
+      <input type="text" id="playerName" placeholder="Ex. Équipe 3e B">
+    </div>
+
+    <button class="cta" id="btnStart">Commencer la partie</button>
+  </section>
+
+  <!-- GAME SCREEN -->
+  <section id="screenGame" class="hidden">
+    <div class="game-grid">
+      <div class="game-main">
+        <div class="status-row">
+          <div class="palier-tag">Question <span class="val" id="qIndex">1</span> / 16 — en jeu : <span class="val num" id="qStake">100 pts</span></div>
+          <div class="timer-wrap">
+            <span class="timer-sec num" id="timerSec">25</span>
+            <div class="timer-track"><div class="timer-fill" id="timerFill"></div></div>
+          </div>
+        </div>
+
+        <div class="joker-row">
+          <button class="joker-btn" id="jokerFifty">
+            <span class="glyph">✂️</span> 50:50
+          </button>
+          <button class="joker-btn" id="jokerPublic">
+            <span class="glyph">👥</span> Avis du public
+          </button>
+          <button class="joker-btn" id="jokerHint">
+            <span class="glyph">💡</span> Indice du prof
+          </button>
+          <button class="joker-btn" id="btnQuit" style="margin-left:auto; text-decoration:none; opacity:1;">
+            🚩 Abandonner et garder mes points
+          </button>
+        </div>
+
+        <div class="panel question-panel">
+          <div class="q-eyebrow" id="qEyebrow">Salaire net de départ, par mois</div>
+          <h2 class="q-metier">Combien gagne un(e) <span class="role" id="qRole">…</span> qui débute ?</h2>
+          <p class="q-prompt">Choisissez le montant le plus proche de la réalité.</p>
+
+          <div class="answers" id="answers"></div>
+
+          <div class="confirm-row hidden" id="confirmRow">
+            <span class="txt" id="confirmTxt">Réponse sélectionnée.</span>
+            <button class="btn-primary" id="btnValidate">Valider — réponse finale</button>
+          </div>
+
+          <div class="public-bars hidden" id="publicBars"></div>
+          <div class="hint-box hidden" id="hintBox"></div>
+          <div class="formation-box hidden" id="formationBox"></div>
+
+          <div class="continue-row hidden" id="continueRow">
+            <button class="btn-primary" id="btnContinue">Question suivante</button>
+          </div>
+        </div>
+      </div>
+
+      <aside class="panel ladder" id="ladder">
+        <div class="ladder-title">Échelle des points</div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- END SCREEN -->
+  <section id="screenEnd" class="hidden">
+    <div class="panel end-panel">
+      <div class="end-kicker" id="endKicker">Partie terminée</div>
+      <div class="end-amount num" id="endAmount">0 pts</div>
+      <p class="end-msg" id="endMsg"></p>
+      <div class="recap" id="recap"></div>
+      <button class="cta" id="btnReplay" style="margin-top:30px;">Rejouer</button>
+    </div>
+  </section>
+
+  <footer>
+    Estimations pédagogiques arrondies, à titre indicatif — les salaires réels varient selon la région, l'employeur, le statut (public/privé/libéral) et l'expérience. Ce jeu sert à lancer la discussion, pas à donner des chiffres officiels. Les questions et montants sont modifiables directement dans le code (tableau <span class="num">QUESTIONS</span>).
+    <p style="margin-top:14px; color:var(--cream-dim);">© 2026 Ameur Aklil — Tous droits réservés.</p>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =========================================================
+     DONNÉES — modifiez librement les métiers, montants et indices
+     correct = index (0-3) de la bonne réponse dans "options"
+     ========================================================= */
+  const QUESTIONS = [
+    { metier:"caissier / caissière de supermarché", category:"repere", options:[1150,1450,1950,2600], correct:1,
+      hint:"C'est un repère de base : le salaire minimum légal en France.",
+      formation:{ diplome:"Aucun diplôme obligatoire, mais un CAP Employé de commerce multi-spécialités est un plus.",
+        lieu:"Proposé dans plusieurs lycées professionnels du Val d'Oise — le CIO de Pontoise peut t'orienter vers le plus proche." } },
+    { metier:"soudeur / soudeuse industriel(le)", category:"pro", options:[1500,2400,3300,4300], correct:1,
+      hint:"Accessible avec un CAP ou un Bac pro. Les postes offshore ou à l'international paient encore bien plus.",
+      formation:{ diplome:"CAP Réalisations industrielles en chaudronnerie ou soudage, puis Bac pro Technicien en chaudronnerie industrielle.",
+        lieu:"Lycée polyvalent Jean Jaurès, à Argenteuil (Val d'Oise)." } },
+    { metier:"influenceur / influenceuse à temps plein", category:"mythe", options:[300,900,2500,6000], correct:1,
+      hint:"La majorité des créateurs de contenu ne vivent pas de leur activité. Les très gros revenus qu'on voit dans les médias concernent une infime minorité.",
+      formation:{ diplome:"Pas de filière officielle. Le chemin le plus proche est un BTS Communication ou un BTS MMI (Métiers du Multimédia et de l'Internet).",
+        lieu:"Plusieurs lycées d'Île-de-France en proposent — demande au CIO de Pontoise lequel est le plus accessible." } },
+    { metier:"grutier / grutière grande hauteur", category:"pro", options:[1500,2100,2800,3600], correct:1,
+      hint:"CAP ou Bac pro, plus une formation spécifique. Un métier technique et recherché, mieux payé qu'on ne l'imagine.",
+      formation:{ diplome:"CAP ou Bac pro Travaux publics, complété par une formation CACES grue (certificat d'aptitude à la conduite).",
+        lieu:"Formation CACES proposée par l'AFPA ou les CFA du BTP du Val d'Oise — renseigne-toi au CIO de Pontoise." } },
+    { metier:"infirmier / infirmière à l'hôpital public", category:"repere", options:[1600,2000,2600,3400], correct:1,
+      hint:"Bac+3, primes de nuit et de dimanche comprises.",
+      formation:{ diplome:"Diplôme d'État d'infirmier (Bac+3, via Parcoursup).",
+        lieu:"IFSI de Pontoise, rattaché au Centre Hospitalier René Dubos." } },
+    { metier:"footballeur professionnel en National (3e division)", category:"mythe", options:[1200,1700,4000,9000], correct:1,
+      hint:"En dehors des grands clubs de Ligue 1, la majorité des joueurs pros touchent un salaire bien plus proche du salaire moyen français.",
+      formation:{ diplome:"Pas de diplôme, mais une section sportive puis un centre de formation de club professionnel.",
+        lieu:"Renseigne-toi auprès de l'UNSS ou du CIO de Pontoise pour les sections sportives du secteur." } },
+    { metier:"électricien / électricienne industriel(le)", category:"pro", options:[1400,2000,2700,3500], correct:1,
+      hint:"Bac pro ou BTS électrotechnique. La haute tension et l'industrie paient mieux que le résidentiel.",
+      formation:{ diplome:"CAP Électricien, puis Bac pro MELEC ou BTS Électrotechnique.",
+        lieu:"BTS Électrotechnique au lycée polyvalent Jean Perrin, à Saint-Ouen-l'Aumône (juste à côté de Pontoise)." } },
+    { metier:"comédien / comédienne (hors stars, statut intermittent)", category:"mythe", options:[900,1300,2800,4500], correct:1,
+      hint:"La majorité des comédiens vivent difficilement de leur art et cumulent souvent un autre emploi.",
+      formation:{ diplome:"Pas de diplôme obligatoire, mais un cursus théâtral en conservatoire aide beaucoup.",
+        lieu:"Conservatoire à Rayonnement Régional (CRR) de Cergy-Pontoise, à Cergy." } },
+    { metier:"technicien(ne) de maintenance éolienne", category:"pro", options:[1600,2300,3100,4000], correct:1,
+      hint:"Accessible avec un BTS. Secteur en pleine croissance, primes de déplacement et de hauteur incluses.",
+      formation:{ diplome:"Bac pro Maintenance des systèmes, puis BTS Maintenance des systèmes (option énergétique).",
+        lieu:"Plusieurs lycées techniques d'Île-de-France en proposent — le CIO de Pontoise peut t'indiquer le plus proche." } },
+    { metier:"professeur(e) certifié(e) (collège/lycée)", category:"repere", options:[1600,2000,2700,3500], correct:1,
+      hint:"Bac+5 requis, mais l'échelon de départ reste modeste dans l'Éducation nationale.",
+      formation:{ diplome:"Master MEEF (Métiers de l'Enseignement, de l'Éducation et de la Formation), Bac+5.",
+        lieu:"INSPE de l'académie de Versailles, site de Cergy — Pontoise (CY Cergy Paris Université)." } },
+    { metier:"trader débutant(e) en banque (salaire fixe, hors bonus)", category:"mythe", options:[2200,3200,5000,8000], correct:1,
+      hint:"Le vrai gros salaire vient des bonus après plusieurs années de performance, pas du fixe de départ.",
+      formation:{ diplome:"Classe préparatoire économique, puis école de commerce ou master finance (Bac+5).",
+        lieu:"Pas de filière locale dédiée — un parcours exigeant à construire avec le CIO de Pontoise." } },
+    { metier:"conducteur / conductrice de travaux", category:"pro", options:[1800,2500,3300,4200], correct:1,
+      hint:"Accessible avec un BTS bâtiment, sans passer par une école d'ingénieur.",
+      formation:{ diplome:"BTS Bâtiment ou BUT Génie Civil, sans passer par une école d'ingénieur.",
+        lieu:"Proposé notamment à l'IUT de Cergy-Pontoise — le CIO de Pontoise peut confirmer l'établissement le plus proche." } },
+    { metier:"rappeur / chanteur(euse) (hors succès viral)", category:"mythe", options:[500,1000,3000,8000], correct:1,
+      hint:"Avant un éventuel succès, la majorité des artistes vivent de cachets irréguliers et de petits contrats.",
+      formation:{ diplome:"Pas de diplôme obligatoire, mais une formation musicale solide aide à durer dans le métier.",
+        lieu:"Conservatoire à Rayonnement Régional (CRR) de Cergy-Pontoise, à Cergy." } },
+    { metier:"chef de partie en cuisine gastronomique", category:"pro", options:[1500,2000,2700,3500], correct:1,
+      hint:"Accessible avec un CAP ou un Bac pro cuisine. Un métier exigeant, mais mieux payé une fois formé et repéré.",
+      formation:{ diplome:"CAP Cuisine, puis Bac pro ou BP Arts de la cuisine pour progresser vers chef de partie.",
+        lieu:"Lycée Auguste Escoffier, à Éragny-sur-Oise — à quelques minutes de Pontoise." } },
+    { metier:"ingénieur informatique (grande école)", category:"repere", options:[2200,2900,3800,5000], correct:1,
+      hint:"Bac+5 en école d'ingénieur, l'un des débuts de carrière les mieux payés.",
+      formation:{ diplome:"Diplôme d'ingénieur (Bac+5), souvent après une prépa scientifique ou un parcours intégré.",
+        lieu:"ENSEA, école d'ingénieurs en électronique et informatique, à Cergy-Pontoise." } },
+    { metier:"créateur / créatrice de start-up (1ère année)", category:"mythe", options:[0,800,2500,5000], correct:1,
+      hint:"La première année, beaucoup d'entrepreneurs ne se versent presque aucun salaire : tout est réinvesti dans l'entreprise.",
+      formation:{ diplome:"Pas de diplôme obligatoire, mais un BTS Gestion de la PME donne de bonnes bases.",
+        lieu:"Lycée Camille Pissarro, à Pontoise même." } },
+  ];
+
+  const CATEGORY_LABELS = {
+    mythe:  "💭 Un métier qu'on imagine très bien payé",
+    pro:    "🛠️ Un métier accessible sans bac+5",
+    repere: "📊 Un repère pour se situer",
+  };
+
+  const POINTS = [100,200,300,500,1000,1500,2500,4000,6000,10000,15000,25000,50000,100000,300000,1000000];
+  const SAFETY_NET_INDICES = [4, 10]; // 0-based: after question 5 et question 11
+  const TIME_LIMIT = 25;
+  const LETTERS = ["A","B","C","D"];
+
+  /* =========================================================
+     ÉTAT
+     ========================================================= */
+  let qi = 0;
+  let bank = 0;
+  let gameQuestions = [];
+  let jokers = { fifty:false, pub:false, hint:false };
+  let timer = null;
+  let secondsLeft = TIME_LIMIT;
+  let answered = false;
+  let selectingIdx = -1;
+  let history = []; // {metier, chosen, correct, options}
+  let audioReady = false;
+
+  /* =========================================================
+     ÉLÉMENTS
+     ========================================================= */
+  const screenStart = document.getElementById('screenStart');
+  const screenGame  = document.getElementById('screenGame');
+  const screenEnd   = document.getElementById('screenEnd');
+
+  const btnStart   = document.getElementById('btnStart');
+  const playerName = document.getElementById('playerName');
+
+  const qIndexEl = document.getElementById('qIndex');
+  const qStakeEl = document.getElementById('qStake');
+  const qRoleEl  = document.getElementById('qRole');
+  const qEyebrowEl = document.getElementById('qEyebrow');
+  const answersEl = document.getElementById('answers');
+  const confirmRow = document.getElementById('confirmRow');
+  const confirmTxt = document.getElementById('confirmTxt');
+  const btnValidate = document.getElementById('btnValidate');
+  const publicBarsEl = document.getElementById('publicBars');
+  const hintBoxEl = document.getElementById('hintBox');
+  const formationBoxEl = document.getElementById('formationBox');
+  const continueRow = document.getElementById('continueRow');
+  const btnContinue = document.getElementById('btnContinue');
+  const btnQuit = document.getElementById('btnQuit');
+  const ladderEl = document.getElementById('ladder');
+
+  const timerSecEl = document.getElementById('timerSec');
+  const timerFillEl = document.getElementById('timerFill');
+
+  const jokerFifty = document.getElementById('jokerFifty');
+  const jokerPublic = document.getElementById('jokerPublic');
+  const jokerHint = document.getElementById('jokerHint');
+
+  const endKicker = document.getElementById('endKicker');
+  const endAmount = document.getElementById('endAmount');
+  const endMsg = document.getElementById('endMsg');
+  const recapEl = document.getElementById('recap');
+  const btnReplay = document.getElementById('btnReplay');
+
+  const musicToggle = document.getElementById('musicToggle');
+  const musicLabel = document.getElementById('musicLabel');
+
+  function fmt(n){
+    return n.toLocaleString('fr-FR').replace(/\u202f|,/g,' ') + (n>=1000 && n<100000 ? '' : '');
+  }
+  function money(n){ return fmt(n) + ' €'; }
+  function pts(n){ return fmt(n) + ' pts'; }
+
+  /* =========================================================
+     AUDIO — musique d'ambiance (fichier réel) + effets sonores (générés)
+     ========================================================= */
+  let actx = null;
+  let musicOn = false;
+  const bgMusicEl = document.getElementById('bgMusic');
+  bgMusicEl.volume = 0.32;
+
+  function ensureAudio(){
+    if (!actx){
+      actx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (actx.state === 'suspended') actx.resume();
+    audioReady = true;
+  }
+
+  function startAmbient(){
+    ensureAudio();
+    bgMusicEl.currentTime = bgMusicEl.currentTime || 0;
+    bgMusicEl.play().catch(() => {});
+  }
+
+  function stopAmbient(){
+    bgMusicEl.pause();
+  }
+
+  function beep(freq, dur, type, gainVal, when){
+    ensureAudio();
+    const t = actx.currentTime + (when||0);
+    const osc = actx.createOscillator();
+    const g = actx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.value = freq;
+    g.gain.value = 0;
+    osc.connect(g).connect(actx.destination);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(gainVal||0.12, t+0.02);
+    g.gain.exponentialRampToValueAtTime(0.001, t+dur);
+    osc.start(t);
+    osc.stop(t+dur+0.05);
+  }
+
+  // Effets sonores du jeu : indépendants du bouton musique, ils jouent toujours
+  function playTick(){ beep(880, 0.08, 'square', 0.08); }
+  function playCorrect(){
+    [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f,i)=> beep(f, 0.3, 'triangle', 0.16, i*0.1));
+  }
+  function playWrong(){
+    [415.30, 349.23, 261.63, 220.00].forEach((f,i)=> beep(f, 0.4, 'sawtooth', 0.14, i*0.15));
+  }
+  function playWin(){
+    [523.25,659.25,783.99,1046.5,1318.5,1568.0].forEach((f,i)=> beep(f, 0.5, 'triangle', 0.17, i*0.12));
+  }
+
+  function setMusic(on){
+    musicOn = on;
+    musicToggle.classList.toggle('on', on);
+    musicToggle.setAttribute('aria-pressed', String(on));
+    musicLabel.textContent = on ? 'Musique activée' : 'Musique coupée';
+    if (on) startAmbient(); else stopAmbient();
+  }
+
+  musicToggle.addEventListener('click', () => setMusic(!musicOn));
+
+  /* =========================================================
+     ÉCHELLE DE POINTS
+     ========================================================= */
+  function renderLadder(){
+    // keep the title node, rebuild rungs
+    const title = ladderEl.querySelector('.ladder-title');
+    ladderEl.innerHTML = '';
+    ladderEl.appendChild(title);
+    for (let i = POINTS.length - 1; i >= 0; i--){
+      const div = document.createElement('div');
+      let cls = 'rung';
+      if (i === qi) cls += ' current';
+      else if (i < qi) cls += ' passed';
+      if (SAFETY_NET_INDICES.includes(i)) cls += ' net';
+      div.className = cls;
+      div.innerHTML = `<span class="n">${i+1}</span><span class="amt num">${pts(POINTS[i])}</span>`;
+      ladderEl.appendChild(div);
+    }
+  }
+
+  function currentSafetyBank(){
+    let net = 0;
+    for (const idx of SAFETY_NET_INDICES){
+      if (qi > idx) net = POINTS[idx];
+    }
+    return net;
+  }
+
+  /* =========================================================
+     DÉROULEMENT DU JEU
+     ========================================================= */
+  function shuffle(arr){
+    for (let i = arr.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function startGame(){
+    qi = 0; bank = 0;
+    jokers = { fifty:false, pub:false, hint:false };
+    history = [];
+    // ordre des questions différent à chaque partie + lettre de la bonne réponse mélangée
+    gameQuestions = shuffle(QUESTIONS.slice()).map(q => {
+      const goodAmount = q.options[q.correct];
+      const mixed = shuffle(q.options.slice());
+      return Object.assign({}, q, { options: mixed, correct: mixed.indexOf(goodAmount) });
+    });
+    jokerFifty.disabled = false;
+    jokerPublic.disabled = false;
+    jokerHint.disabled = false;
+    screenStart.classList.add('hidden');
+    screenEnd.classList.add('hidden');
+    screenGame.classList.remove('hidden');
+    loadQuestion();
+  }
+
+  function loadQuestion(){
+    answered = false;
+    const q = gameQuestions[qi];
+    qIndexEl.textContent = (qi+1);
+    qStakeEl.textContent = pts(POINTS[qi]);
+    qRoleEl.textContent = q.metier;
+    qEyebrowEl.textContent = CATEGORY_LABELS[q.category] || "Salaire net de départ, par mois";
+    qEyebrowEl.className = 'q-eyebrow' + (q.category ? ' cat-' + q.category : '');
+
+    publicBarsEl.classList.add('hidden');
+    publicBarsEl.innerHTML = '';
+    hintBoxEl.classList.add('hidden');
+    hintBoxEl.innerHTML = '';
+    formationBoxEl.classList.add('hidden');
+    formationBoxEl.innerHTML = '';
+    continueRow.classList.add('hidden');
+    confirmRow.classList.add('hidden');
+    selectingIdx = -1;
+
+    answersEl.innerHTML = '';
+    q.options.forEach((opt, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'answer';
+      btn.dataset.idx = idx;
+      btn.innerHTML = `<span class="letter">${LETTERS[idx]}</span><span class="amount">${money(opt)}</span>`;
+      btn.addEventListener('click', () => chooseAnswer(idx));
+      answersEl.appendChild(btn);
+    });
+
+    renderLadder();
+    startTimer();
+  }
+
+  function startTimer(){
+    clearInterval(timer);
+    secondsLeft = TIME_LIMIT;
+    updateTimerUI();
+    timer = setInterval(() => {
+      secondsLeft--;
+      updateTimerUI();
+      if (secondsLeft > 0 && musicOn){
+        const urgency = 1 - (secondsLeft / TIME_LIMIT); // 0 → 1, monte avec la tension
+        beep(720 + urgency*260, 0.07, 'square', 0.04 + urgency*0.08);
+      }
+      if (secondsLeft <= 0){
+        clearInterval(timer);
+        lockAnswer(selectingIdx); // temps écoulé : on verrouille ce qui était sélectionné (ou rien)
+      }
+    }, 1000);
+  }
+
+  function updateTimerUI(){
+    timerSecEl.textContent = secondsLeft;
+    const pct = Math.max(0, (secondsLeft/TIME_LIMIT)*100);
+    timerFillEl.style.width = pct + '%';
+    timerFillEl.classList.toggle('warn', secondsLeft <= 12 && secondsLeft > 5);
+    timerFillEl.classList.toggle('danger', secondsLeft <= 5);
+  }
+
+  function chooseAnswer(idx){
+    if (answered) return;
+    selectingIdx = idx;
+    const buttons = Array.from(answersEl.querySelectorAll('.answer'));
+    buttons.forEach((b,i) => b.classList.toggle('selected', i === idx));
+    confirmRow.classList.remove('hidden');
+    confirmTxt.textContent = `Réponse ${LETTERS[idx]} sélectionnée — c'est votre réponse finale ?`;
+  }
+
+  btnValidate.addEventListener('click', () => {
+    if (answered || selectingIdx < 0) return;
+    clearInterval(timer);
+    beep(220, 0.5, 'sawtooth', 0.06); // roulement de tambour bref
+    lockAnswer(selectingIdx);
+  });
+
+  function lockAnswer(idx){
+    if (answered) return;
+    answered = true;
+    clearInterval(timer);
+    confirmRow.classList.add('hidden');
+    const q = gameQuestions[qi];
+    const buttons = Array.from(answersEl.querySelectorAll('.answer'));
+    buttons.forEach(b => b.disabled = true);
+
+    if (idx >= 0){
+      buttons[idx].classList.add('selected');
+    }
+
+    setTimeout(() => {
+      buttons.forEach((b,i) => {
+        if (i === q.correct) b.classList.add('correct');
+        else if (i === idx) b.classList.add('wrong');
+      });
+
+      const isCorrect = idx === q.correct;
+      history.push({ metier:q.metier, correctAmt:q.options[q.correct], chosenAmt: idx>=0 ? q.options[idx] : null, correct:isCorrect, timedOut: idx<0 });
+
+      if (q.formation){
+        formationBoxEl.classList.remove('hidden');
+        formationBoxEl.innerHTML = `🎓 <b>Pour devenir ${q.metier}</b> : ${q.formation.diplome}<br>📍 ${q.formation.lieu}`;
+      }
+
+      if (isCorrect){
+        playCorrect();
+        bank = POINTS[qi];
+        continueRow.classList.remove('hidden');
+        btnContinue.textContent = (qi === gameQuestions.length-1) ? 'Voir le résultat final' : 'Question suivante';
+        btnContinue.onclick = () => {
+          qi++;
+          if (qi >= gameQuestions.length){ endGame('won'); }
+          else { loadQuestion(); }
+        };
+      } else {
+        playWrong();
+        bank = currentSafetyBank();
+        continueRow.classList.remove('hidden');
+        btnContinue.textContent = 'Voir le résultat';
+        btnContinue.onclick = () => endGame('lost');
+      }
+    }, 900);
+  }
+
+  btnQuit.addEventListener('click', () => {
+    if (answered) return;
+    clearInterval(timer);
+    bank = qi === 0 ? 0 : POINTS[qi-1];
+    endGame('quit');
+  });
+
+  /* ---------- Jokers ---------- */
+  jokerFifty.addEventListener('click', () => {
+    if (jokers.fifty || answered) return;
+    jokers.fifty = true;
+    jokerFifty.disabled = true;
+    const q = gameQuestions[qi];
+    const buttons = Array.from(answersEl.querySelectorAll('.answer'));
+    const wrongIdxs = buttons.map((_,i)=>i).filter(i => i !== q.correct);
+    // remove two random wrong answers, keep them non-selectable
+    const toRemove = wrongIdxs.sort(() => Math.random()-0.5).slice(0,2);
+    toRemove.forEach(i => {
+      buttons[i].style.visibility = 'hidden';
+      buttons[i].disabled = true;
+    });
+  });
+
+  jokerPublic.addEventListener('click', () => {
+    if (jokers.pub || answered) return;
+    jokers.pub = true;
+    jokerPublic.disabled = true;
+    const q = gameQuestions[qi];
+    const visibleIdxs = Array.from(answersEl.querySelectorAll('.answer'))
+      .map((b,i)=> ({i, visible: b.style.visibility !== 'hidden'}))
+      .filter(x=>x.visible).map(x=>x.i);
+
+    // biais réaliste : la bonne réponse gagne souvent, mais pas toujours largement
+    let weights = {};
+    visibleIdxs.forEach(i => { weights[i] = Math.random()*30 + 10; });
+    weights[q.correct] += 35;
+    const total = Object.values(weights).reduce((a,b)=>a+b,0);
+
+    publicBarsEl.innerHTML = '';
+    publicBarsEl.classList.remove('hidden');
+    visibleIdxs.forEach(i => {
+      const pct = Math.round((weights[i]/total)*100);
+      const row = document.createElement('div');
+      row.className = 'public-bar-row';
+      row.innerHTML = `<span class="letter">${LETTERS[i]}</span>
+        <div class="public-bar-track"><div class="public-bar-fill" data-pct="${pct}"></div></div>
+        <span class="public-bar-pct num">${pct}%</span>`;
+      publicBarsEl.appendChild(row);
+    });
+    requestAnimationFrame(() => {
+      publicBarsEl.querySelectorAll('.public-bar-fill').forEach(el => {
+        el.style.width = el.dataset.pct + '%';
+      });
+    });
+  });
+
+  jokerHint.addEventListener('click', () => {
+    if (jokers.hint || answered) return;
+    jokers.hint = true;
+    jokerHint.disabled = true;
+    const q = gameQuestions[qi];
+    hintBoxEl.classList.remove('hidden');
+    hintBoxEl.textContent = '💡 ' + q.hint;
+  });
+
+  /* ---------- Fin de partie ---------- */
+  function endGame(reason){
+    screenGame.classList.add('hidden');
+    screenEnd.classList.remove('hidden');
+
+    const name = playerName.value.trim();
+    const label = name ? name : 'Vous';
+
+    if (reason === 'won'){
+      endKicker.textContent = '🏆 Score maximum atteint !';
+      endMsg.textContent = `${label} avez estimé correctement les 15 salaires de départ. Score final :`;
+      playWin();
+      bank = POINTS[POINTS.length-1];
+    } else if (reason === 'quit'){
+      endKicker.textContent = '🚩 Partie arrêtée volontairement';
+      endMsg.textContent = `${label} repartez avec vos points sécurisés.`;
+    } else {
+      endKicker.textContent = '❌ Mauvaise estimation';
+      endMsg.textContent = `${label} repartez avec le dernier filet de sécurité atteint.`;
+    }
+    endAmount.textContent = pts(bank);
+
+    recapEl.innerHTML = '';
+    history.forEach(h => {
+      const row = document.createElement('div');
+      row.className = 'recap-row ' + (h.correct ? 'ok' : 'ko');
+      const chosenTxt = h.timedOut ? 'temps écoulé' : money(h.chosenAmt);
+      row.innerHTML = `<span class="m">${h.metier}</span><span class="num">${h.correct ? '✓ ' + money(h.correctAmt) : chosenTxt + ' → ' + money(h.correctAmt)}</span>`;
+      recapEl.appendChild(row);
+    });
+
+    setMusic(false);
+    bgMusicEl.currentTime = 0; // la musique repart du début à la prochaine partie
+  }
+
+  btnReplay.addEventListener('click', () => {
+    screenEnd.classList.add('hidden');
+    screenStart.classList.remove('hidden');
+  });
+
+  btnStart.addEventListener('click', () => {
+    ensureAudio();
+    setMusic(true); // la musique démarre dès le début de la partie (le bouton permet de la couper)
+    startGame();
+  });
+
+})();
+</script>
+</body>
+</html>
